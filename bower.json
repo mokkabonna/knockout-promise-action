@@ -1,0 +1,27 @@
+{
+  "name": "knockout.bindingHandlers.hidden",
+  "main": "src/hidden.js",
+  "version": "1.0.4",
+  "ignore": [
+    "node_modules",
+    "spec",
+    "Gruntfile.js",
+    "karma.conf.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "knockout": ">=3.1.0",
+    "bluebird": "~2.9.25"
+  },
+  "devDependencies": {
+    "requirejs": "*"
+  },
+  "keywords": [
+    "knockout",
+    "knockout.js",
+    "binding",
+    "bindingHandlers",
+    "amd",
+    "hidden"
+  ]
+}
