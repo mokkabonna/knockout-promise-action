@@ -1,0 +1,108 @@
+<html>
+
+<head>
+    <title>Knockout promise action</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-markdown/2.8.0/js/bootstrap-markdown.min.js"></script>
+    <script>
+    var requirejs = {
+        paths: {
+            knockout: '../bower_components/knockout/dist/knockout',
+            promise: '../bower_components/bluebird/js/browser/bluebird',
+        }
+    };
+
+    hljs.initHighlightingOnLoad();
+    </script>
+    <script src="http://requirejs.org/docs/release/2.1.17/minified/require.js" data-main="demo"></script>
+    <style>
+    body {
+        padding: 20px;
+    }
+
+    .todo-area {
+        margin-top: 20px;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container hidden" data-bind="css: {hidden : !initiated}">
+        <div class="jumbotron">
+            <h1>Knockout promise action</h1>
+            <p>Wrap your promise based actions in promiseAction to get helper observables for use in your view and view model.</p>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-6">
+                <h2>Demo</h2>
+                <button class="btn btn-primary" data-bind="click: loadToDoList, visible: !loadToDoList.isPending()">Load TODO's</button>
+                <div data-bind="if: loadToDoList.isPending">
+                    <button class="btn btn-primary" data-bind="click: resolveWithList">Resolve with some TODO's</button>
+                    <button class="btn btn-warning" data-bind="click: resolveWithEmptyList">Resolve with empty list</button>
+                    <button class="btn btn-danger" data-bind="click: reject">Reject request</button>
+                    <label class="form-label">
+                        <input type="checkbox" data-bind="checked: loadToDoList.handleErrorInView"> Handle error in view
+                    </label>
+                </div>
+                <div data-bind="if: loadToDoList.isPending">
+                    Loading todos...
+                </div>
+                <div data-bind="if: loadToDoList.isResolved">
+                    <div data-bind="ifnot: loadToDoList.hasResult">
+                        You have no items in your todolist
+                    </div>
+                    <div data-bind="if: loadToDoList.hasResult">
+                        <h3>Your todolist:</h3>
+                        <ol data-bind="foreach: loadToDoList.resolvedWith">
+                            <li>
+                                <span data-bind="text:$data"></span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+                <div data-bind="with: loadToDoList.rejectedWith">
+                    Error occured while loading todoList.
+                    <br> Error message : <span data-bind="text:message"></span>
+                    <button class="btn btn-link" data-bind="click: $parent.loadToDoList">Retry</button>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+                <h2>State of helpers</h2>
+                <pre data-bind="text:dump">
+
+              </pre>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <h2>View</h2>
+                <pre><code class="html">&lt;div data-bind="if: loadToDoList.isPending"&gt;
+  Loading todos...
+&lt;/div&gt;
+
+&lt;div data-bind="if: loadToDoList.isResolved"&gt;
+    &lt;div data-bind="ifnot: loadToDoList.hasResult"&gt;
+      You have no items in your todolist
+    &lt;/div&gt;
+    &lt;div data-bind="if: loadToDoList.hasResult"&gt;
+        &lt;ol data-bind="foreach: loadToDoList.resolvedWith"&gt;
+            &lt;li&gt;
+                &lt;span data-bind="text: $data"&gt;&lt;/span&gt;
+            &lt;/li&gt;
+        &lt;/ol&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div data-bind="with: loadToDoList.rejectedWith"&gt;
+    Error occured while loading todoList. &lt;br&gt;
+    Error message : &lt;span data-bind="text: message"&gt;&lt;/span&gt;
+    &lt;button class="btn btn-link" data-bind="click: $parent.loadToDoList"&gt;Retry&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

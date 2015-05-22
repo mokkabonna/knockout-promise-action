@@ -3,46 +3,131 @@ define(['knockout', 'promise'], function(ko, Promise) {
 
   function PromiseAction(action) {
     var activePromise = ko.observable();
-    var isPending = ko.observable(false);
-    var isResolved = ko.observable(false);
-    var isRejected = ko.observable(false);
-    var resolvedWith = ko.observable();
-    var rejectedWith = ko.observable();
+    var currentState = ko.observable({
+      isPending: false,
+      isResolved: false,
+      isRejected: false,
+      resolvedWith: undefined,
+      rejectedWith: undefined
+    });
+    // var isPending = ko.observable(false);
+    // var isResolved = ko.observable(false);
+    // var isRejected = ko.observable(false);
+    // var resolvedWith = ko.observable();
+    // var rejectedWith = ko.observable();
 
     function wrapper() {
-      isPending(true);
-      isResolved(false);
-      isRejected(false);
-      resolvedWith(undefined);
-      rejectedWith(undefined);
-
-      var promise = new Promise(function(resolve, reject) {
-
-        action.apply(this, arguments).then(function(data) {
-          isPending(false);
-          isResolved(true);
-          resolvedWith(data);
-          resolve(data);
-        }, function(err) {
-          isPending(false);
-          isRejected(true);
-          rejectedWith(err);
-          reject(err);
-        });
-
+      /*jshint validthis:true */
+      currentState({
+        isPending: true,
+        isResolved: false,
+        isRejected: false,
+        resolvedWith: undefined,
+        rejectedWith: undefined
       });
 
-      activePromise(promise);
 
-      return promise;
+      var result;
+      var promise;
+
+      try {
+        result = action.apply(this, arguments);
+
+        if (result && result.then) {
+
+          promise = new Promise(function(resolve, reject) {
+
+            result.then(function(data) {
+              currentState({
+                isPending: false,
+                isResolved: true,
+                isRejected: false,
+                resolvedWith: data,
+                rejectedWith: undefined
+              });
+
+              resolve(data);
+            }, function(err) {
+              currentState({
+                isPending: false,
+                isResolved: false,
+                isRejected: true,
+                resolvedWith: undefined,
+                rejectedWith: err
+              });
+
+              reject(err);
+            });
+
+          });
+
+          promise.catch(function(err) {
+            //If the view claim they will handle the error then swallow it, if not rethrow it
+            if (!wrapper.handleErrorInView()) {
+              throw err;
+            }
+          });
+
+          activePromise(promise);
+
+          return promise;
+        } else {
+          currentState({
+            isPending: false,
+            isResolved: true,
+            isRejected: false,
+            resolvedWith: result,
+            rejectedWith: undefined
+          });
+
+          return result;
+        }
+
+      } catch (e) {
+        currentState({
+          isPending: false,
+          isResolved: false,
+          isRejected: true,
+          resolvedWith: undefined,
+          rejectedWith: e
+        });
+
+        if (!wrapper.handleErrorInView()) {
+          throw e;
+        }
+      }
+
     }
 
     wrapper.activePromise = ko.pureComputed(activePromise);
-    wrapper.isPending = ko.pureComputed(isPending);
-    wrapper.isResolved = ko.pureComputed(isResolved);
-    wrapper.isRejected = ko.pureComputed(isRejected);
-    wrapper.resolvedWith = ko.pureComputed(resolvedWith);
-    wrapper.rejectedWith = ko.pureComputed(rejectedWith);
+    wrapper.isPending = ko.pureComputed(function() {
+      return currentState().isPending;
+    });
+
+    wrapper.isResolved = ko.pureComputed(function() {
+      return currentState().isResolved;
+    });
+
+    wrapper.isRejected = ko.pureComputed(function() {
+      return currentState().isRejected;
+    });
+
+    wrapper.resolvedWith = ko.pureComputed(function() {
+      return currentState().resolvedWith;
+    });
+
+    wrapper.rejectedWith = ko.pureComputed(function() {
+      return currentState().rejectedWith;
+    });
+
+    /**
+     * Set this to true to take responsibility for errors in the view.
+     *
+     * If this is set to false any errors will be passed on to any global unhandled error handler.
+     *
+     * See the specifics of your promise libary for the behaviour of this.
+     */
+    wrapper.handleErrorInView = ko.observable(false);
 
     /**
      * Returns true if resolved value is:
@@ -53,7 +138,7 @@ define(['knockout', 'promise'], function(ko, Promise) {
      * All other values are false
      */
     wrapper.hasResult = ko.pureComputed(function() {
-      var value = resolvedWith();
+      var value = currentState().resolvedWith;
       var hasSomething = value ? true : false;
 
       if (Array.isArray(value)) {

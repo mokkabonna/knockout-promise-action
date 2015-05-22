@@ -40,10 +40,77 @@ define(['knockout', 'src/knockout-promise-action', 'promise'], function(ko, Prom
 
     });
 
-    describe('when called', function() {
+    describe('when called and result is not a promise', function() {
+
+      describe('when it completes successfully', function() {
+        beforeEach(function() {
+          action = PromiseAction(function() {
+            return 3;
+          });
+        });
+
+        it('reflects the state', function() {
+          var result = action();
+          expect(result).to.be(3);
+          expect(action.isPending()).to.be(false);
+          expect(action.isResolved()).to.be(true);
+          expect(action.isRejected()).to.be(false);
+          expect(action.resolvedWith()).to.be(3);
+          expect(action.rejectedWith()).to.be(undefined);
+          expect(action.activePromise()).to.be(undefined);
+        });
+      });
+
+      describe('when it throws an exception', function() {
+        beforeEach(function() {
+          action = PromiseAction(function() {
+            throw new Error('Something went wrong');
+          });
+        });
+
+        it('down not blow up if view handles error', function() {
+          action.handleErrorInView(true);
+          expect(action).not.to.throwError();
+        });
+
+        it('does not go into pending state', function() {
+          //test subscription of isPending
+        });
+
+        it('state is reflected', function() {
+          var result;
+          try {
+            result = action();
+          } catch (e) {
+            expect(e.message).to.eql('Something went wrong');
+          }
+
+          expect(action.isPending()).to.be(false);
+          expect(action.isResolved()).to.be(false);
+          expect(action.isRejected()).to.be(true);
+          expect(action.resolvedWith()).to.be(undefined);
+          expect(action.rejectedWith().message).to.eql('Something went wrong');
+          expect(action.activePromise()).to.be(undefined);
+        });
+      });
+
+    });
+
+    describe('when called and result is a promise', function() {
       var returnValue;
       beforeEach(function() {
         returnValue = action();
+      });
+
+      it('is called with the right this', function() {
+        var stub = sinon.stub();
+        var obj = {
+          test: PromiseAction(stub)
+        };
+
+        obj.test();
+
+        sinon.assert.calledOn(stub, obj);
       });
 
       it('state is reflected', function() {
