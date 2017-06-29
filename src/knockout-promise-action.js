@@ -10,11 +10,6 @@ define(['knockout', 'promise'], function(ko, Promise) {
       resolvedWith: undefined,
       rejectedWith: undefined
     });
-    // var isPending = ko.observable(false);
-    // var isResolved = ko.observable(false);
-    // var isRejected = ko.observable(false);
-    // var resolvedWith = ko.observable();
-    // var rejectedWith = ko.observable();
 
     function wrapper() {
       /*jshint validthis:true */
